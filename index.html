@@ -1,0 +1,1244 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pi Emergency Transfer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #111;
+            color: #eee;
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: #ff3e3e;
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+        
+        .status-bar {
+            background-color: #222;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 10px 0;
+            border-left: 4px solid #ff3e3e;
+        }
+        
+        .input-group {
+            margin-bottom: 15px;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #aaa;
+        }
+        
+        .input-group input, .input-group textarea {
+            width: 100%;
+            padding: 12px;
+            background-color: #333;
+            border: 1px solid #444;
+            border-radius: 5px;
+            color: #fff;
+            font-size: 16px;
+        }
+        
+        .input-group textarea {
+            height: 80px;
+            resize: none;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            background-color: #ff3e3e;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            flex: 1;
+        }
+        
+        .btn:disabled {
+            background-color: #555;
+            cursor: not-allowed;
+        }
+        
+        .btn.secondary {
+            background-color: #333;
+        }
+        
+        .log-container {
+            background-color: #000;
+            border: 1px solid #333;
+            padding: 10px;
+            border-radius: 5px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 20px;
+            font-family: monospace;
+        }
+        
+        .log-entry {
+            margin-bottom: 5px;
+            font-size: 14px;
+            white-space: pre-wrap;
+        }
+        
+        .success {
+            color: #00ff00;
+        }
+        
+        .error {
+            color: #ff3e3e;
+        }
+        
+        .warning {
+            color: #ffcc00;
+        }
+        
+        .info {
+            color: #3498db;
+        }
+        
+        .counter {
+            font-size: 18px;
+            margin: 15px 0;
+            font-weight: bold;
+        }
+        
+        .counter span {
+            color: #ff3e3e;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background-color: #333;
+            border-radius: 5px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress {
+            height: 100%;
+            background-color: #ff3e3e;
+            width: 0%;
+            transition: width 0.5s;
+        }
+        
+        .small-text {
+            font-size: 12px;
+            color: #777;
+            margin-top: 5px;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .stats {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        .stat-box {
+            background-color: #222;
+            border-radius: 5px;
+            padding: 10px;
+            flex: 1;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ff3e3e;
+            margin: 5px 0;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #aaa;
+        }
+        
+        #config-section {
+            margin-top: 20px;
+            border-top: 1px solid #333;
+            padding-top: 20px;
+        }
+        
+        .config-title {
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: #aaa;
+        }
+        
+        .dropdown-container {
+            position: relative;
+            margin-bottom: 10px;
+        }
+        
+        .dropdown-btn {
+            background-color: #333;
+            color: #fff;
+            padding: 10px;
+            border: 1px solid #444;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            text-align: left;
+            position: relative;
+        }
+        
+        .dropdown-btn:after {
+            content: '▼';
+            position: absolute;
+            right: 10px;
+            top: 10px;
+        }
+        
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #333;
+            width: 100%;
+            border: 1px solid #444;
+            border-radius: 5px;
+            z-index: 10;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .dropdown-content.show {
+            display: block;
+        }
+        
+        .dropdown-item {
+            padding: 10px;
+            cursor: pointer;
+        }
+        
+        .dropdown-item:hover {
+            background-color: #444;
+        }
+        
+        .collapsible {
+            background-color: #333;
+            color: #fff;
+            cursor: pointer;
+            padding: 10px;
+            width: 100%;
+            border: none;
+            text-align: left;
+            outline: none;
+            font-size: 16px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            position: relative;
+        }
+        
+        .collapsible:after {
+            content: '▼';
+            position: absolute;
+            right: 10px;
+        }
+        
+        .active:after {
+            content: '▲';
+        }
+        
+        .collapsible-content {
+            padding: 0 18px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.2s ease-out;
+            background-color: #222;
+            border-radius: 0 0 5px 5px;
+        }
+
+        .monitor-controls {
+            margin: 15px 0;
+            background-color: #222;
+            padding: 15px;
+            border-radius: 5px;
+        }
+
+        .monitor-status {
+            font-size: 14px;
+            margin: 10px 0;
+        }
+
+        .unlock-time {
+            font-size: 18px;
+            font-weight: bold;
+            color: #ff3e3e;
+            margin-bottom: 10px;
+        }
+
+        .countdown {
+            font-size: 20px;
+            margin: 10px 0;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>Pi Emergency Transfer</h1>
+    
+    <div class="status-bar">
+        <div id="status-message">Chưa kết nối với Pi Network</div>
+    </div>
+    
+    <div id="login-section">
+        <div class="input-group">
+            <label for="passphrase">Pi Wallet Passphrase:</label>
+            <textarea id="passphrase" placeholder="Nhập 24 từ passphrase của ví Pi"></textarea>
+            <div class="small-text">Passphrase được mã hóa và chỉ được sử dụng để khôi phục ví của bạn.</div>
+        </div>
+        
+        <div class="input-group">
+            <label for="target-wallet">Địa chỉ ví đích:</label>
+            <input type="text" id="target-wallet" placeholder="Nhập địa chỉ ví đích để nhận Pi">
+        </div>
+        
+        <div class="input-group">
+            <label for="unlock-time">Thời gian mở khóa ví (tùy chọn):</label>
+            <input type="datetime-local" id="unlock-time">
+            <div class="small-text">Nhập thời gian dự kiến ví được mở khóa để thiết lập tự động giám sát.</div>
+        </div>
+        
+        <div class="btn-group">
+            <button id="login-btn" class="btn">Kết nối với ví</button>
+            <button id="config-btn" class="btn secondary">Cấu hình</button>
+        </div>
+    </div>
+    
+    <div id="wallet-section" class="hidden">
+        <div class="stats">
+            <div class="stat-box">
+                <div class="stat-label">Tổng số Pi</div>
+                <div id="total-balance" class="stat-value">0.00</div>
+                <div class="stat-label">Pi</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Khả dụng</div>
+                <div id="available-balance" class="stat-value">0.00</div>
+                <div class="stat-label">Pi</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Trạng thái</div>
+                <div id="wallet-status" class="stat-value">?</div>
+                <div class="stat-label">Ví</div>
+            </div>
+        </div>
+        
+        <div id="monitor-section" class="monitor-controls">
+            <div class="unlock-time">Thời gian mở khóa: <span id="display-unlock-time">Chưa đặt</span></div>
+            <div id="countdown" class="countdown">--:--:--</div>
+            <div class="monitor-status">Trạng thái giám sát: <span id="monitor-status-text">Chưa bắt đầu</span></div>
+            <div class="btn-group">
+                <button id="start-monitor-btn" class="btn">Bắt đầu giám sát</button>
+                <button id="stop-monitor-btn" class="btn secondary" disabled>Dừng giám sát</button>
+            </div>
+        </div>
+        
+        <div class="counter">
+            Trạng thái: <span id="current-operation">Chờ thao tác...</span>
+        </div>
+        
+        <div class="progress-bar">
+            <div id="progress" class="progress"></div>
+        </div>
+        
+        <div id="counter-display" class="counter">
+            Hoàn thành: <span id="completed-count">0</span>/<span id="total-count">0</span>
+        </div>
+        
+        <div class="btn-group">
+            <button id="check-status-btn" class="btn">Kiểm tra trạng thái</button>
+            <button id="transfer-all-btn" class="btn" disabled>Chuyển tất cả</button>
+        </div>
+        
+        <div class="btn-group" style="margin-top: 10px;">
+            <button id="auto-transfer-btn" class="btn">Tự động chuyển khi mở khóa</button>
+            <button id="stop-btn" class="btn secondary" disabled>Dừng</button>
+        </div>
+    </div>
+    
+    <div class="log-container">
+        <div id="log"></div>
+    </div>
+    
+    <div id="config-section" class="hidden">
+        <div class="config-title">Cấu hình nâng cao</div>
+        
+        <div class="input-group">
+            <label for="check-interval">Tần suất kiểm tra trạng thái (giây):</label>
+            <input type="number" id="check-interval" value="5" min="1" max="60">
+            <div class="small-text">Tần suất kiểm tra ví đã mở khóa chưa.</div>
+        </div>
+        
+        <div class="input-group">
+            <label for="transfer-rate">Tốc độ chuyển (lệnh/giây):</label>
+            <input type="number" id="transfer-rate" value="60" min="1" max="100">
+            <div class="small-text">Khuyến nghị: 60 lệnh/giây để tối ưu tốc độ.</div>
+        </div>
+        
+        <div class="input-group">
+            <label for="fee-rate">Phí giao dịch (Pi):</label>
+            <input type="number" id="fee-rate" value="0.05" min="0.001" max="1" step="0.001">
+            <div class="small-text">Khuyến nghị: 0.05 Pi để giao dịch được ưu tiên.</div>
+        </div>
+        
+        <div class="input-group">
+            <label for="batch-size">Kích thước batch (lệnh/batch):</label>
+            <input type="number" id="batch-size" value="15" min="1" max="100">
+            <div class="small-text">Số lệnh xử lý đồng thời trong một batch.</div>
+        </div>
+        
+        <div class="input-group">
+            <label for="pi-asset-issuer">Pi Asset Issuer:</label>
+            <input type="text" id="pi-asset-issuer" value="GBQTIOS3XGHB7LVYGBKQVJGCZ3R4JL5E4CBSWJ5ALIJUHBKS6263644L">
+            <div class="small-text">Địa chỉ phát hành Pi trên mạng Stellar.</div>
+        </div>
+        
+        <button id="save-config-btn" class="btn">Lưu cấu hình</button>
+    </div>
+    
+    <button class="collapsible" style="margin-top: 20px;">Thông tin bảo mật</button>
+    <div class="collapsible-content">
+        <p style="padding: 10px;">
+            Ứng dụng này chạy hoàn toàn trong trình duyệt của bạn và không gửi passphrase của bạn đến bất kỳ máy chủ nào. 
+            Mã nguồn hoạt động bằng cách kết nối trực tiếp với mạng Stellar thông qua passphrase của bạn, thực hiện các hoạt động giám sát và chuyển Pi, 
+            sau đó ngắt kết nối. Nếu bạn muốn kiểm tra mã nguồn, hãy kiểm tra mã JavaScript của trang.
+        </p>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bip39@3.0.4/index.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@scure/bip39@1.2.1/index.js"></script>
+    <script>
+  // Đảm bảo bip39 được định nghĩa toàn cục
+  window.bip39 = window.bip39 || require('bip39');
+    </script>
+        // Cấu hình
+        let config = {
+            checkInterval: 5,    // Tần suất kiểm tra trạng thái (giây)
+            transferRate: 60,    // Số lệnh chuyển mỗi giây
+            feeRate: 0.05,       // Phí giao dịch (Pi)
+            batchSize: 15        // Kích thước batch
+        };
+        
+        // Biến trạng thái
+        let isConnected = false;
+        let isProcessing = false;
+        let isMonitoring = false;
+        let wallet = null;
+        let balances = {
+            total: 0,
+            available: 0
+        };
+        let walletStatus = 'unknown'; // 'locked', 'unlocked', 'unknown'
+        let operations = {
+            total: 0,
+            completed: 0,
+            success: 0,
+            failed: 0
+        };
+        let stopRequested = false;
+        let monitorInterval = null;
+        let unlockTime = null;
+        let countdownInterval = null;
+        
+        // Các mạng Stellar
+        const MAINNET_URL = 'https://horizon.stellar.org';
+        const TESTNET_URL = 'https://horizon-testnet.stellar.org';
+        const PI_ASSET_CODE = 'PI';
+        let PI_ASSET_ISSUER = 'GBQTIOS3XGHB7LVYGBKQVJGCZ3R4JL5E4CBSWJ5ALIJUHBKS6263644L'; // Cập nhật từ cấu hình
+        
+        // Các element references
+        const elements = {
+            statusMessage: document.getElementById('status-message'),
+            loginBtn: document.getElementById('login-btn'),
+            configBtn: document.getElementById('config-btn'),
+            passphrase: document.getElementById('passphrase'),
+            targetWallet: document.getElementById('target-wallet'),
+            unlockTimeInput: document.getElementById('unlock-time'),
+            loginSection: document.getElementById('login-section'),
+            walletSection: document.getElementById('wallet-section'),
+            configSection: document.getElementById('config-section'),
+            totalBalance: document.getElementById('total-balance'),
+            availableBalance: document.getElementById('available-balance'),
+            walletStatus: document.getElementById('wallet-status'),
+            currentOperation: document.getElementById('current-operation'),
+            progress: document.getElementById('progress'),
+            completedCount: document.getElementById('completed-count'),
+            totalCount: document.getElementById('total-count'),
+            checkStatusBtn: document.getElementById('check-status-btn'),
+            transferAllBtn: document.getElementById('transfer-all-btn'),
+            autoTransferBtn: document.getElementById('auto-transfer-btn'),
+            stopBtn: document.getElementById('stop-btn'),
+            startMonitorBtn: document.getElementById('start-monitor-btn'),
+            stopMonitorBtn: document.getElementById('stop-monitor-btn'),
+            monitorStatusText: document.getElementById('monitor-status-text'),
+            displayUnlockTime: document.getElementById('display-unlock-time'),
+            countdown: document.getElementById('countdown'),
+            log: document.getElementById('log'),
+            checkInterval: document.getElementById('check-interval'),
+            transferRate: document.getElementById('transfer-rate'),
+            feeRate: document.getElementById('fee-rate'),
+            batchSize: document.getElementById('batch-size'),
+            piAssetIssuer: document.getElementById('pi-asset-issuer'),
+            saveConfigBtn: document.getElementById('save-config-btn')
+        };
+        
+        // Khởi tạo
+        function init() {
+            // Thiết lập event listeners
+            elements.loginBtn.addEventListener('click', connectWallet);
+            elements.configBtn.addEventListener('click', toggleConfigSection);
+            elements.checkStatusBtn.addEventListener('click', checkWalletStatus);
+            elements.transferAllBtn.addEventListener('click', transferAll);
+            elements.autoTransferBtn.addEventListener('click', toggleAutoTransfer);
+            elements.stopBtn.addEventListener('click', stopOperations);
+            elements.startMonitorBtn.addEventListener('click', startMonitoring);
+            elements.stopMonitorBtn.addEventListener('click', stopMonitoring);
+            elements.saveConfigBtn.addEventListener('click', saveConfig);
+            
+            // Thiết lập collapsible
+            const coll = document.getElementsByClassName("collapsible");
+            for (let i = 0; i < coll.length; i++) {
+                coll[i].addEventListener("click", function() {
+                    this.classList.toggle("active");
+                    const content = this.nextElementSibling;
+                    if (content.style.maxHeight) {
+                        content.style.maxHeight = null;
+                    } else {
+                        content.style.maxHeight = content.scrollHeight + "px";
+                    }
+                });
+            }
+            
+            // Tải cấu hình từ localStorage nếu có
+            loadConfig();
+            
+            // Cập nhật PI_ASSET_ISSUER từ cấu hình
+            PI_ASSET_ISSUER = elements.piAssetIssuer.value;
+            
+            log('Ứng dụng sẵn sàng. Vui lòng nhập passphrase, địa chỉ ví đích và thời gian mở khóa.', 'info');
+        }
+        
+        // Kết nối ví
+        async function connectWallet() {
+            const passphrase = elements.passphrase.value.trim();
+            const targetWallet = elements.targetWallet.value.trim();
+            const unlockTimeStr = elements.unlockTimeInput.value;
+            
+            if (!passphrase) {
+                log('Vui lòng nhập passphrase của ví Pi.', 'error');
+                return;
+            }
+            
+            if (!targetWallet) {
+                log('Vui lòng nhập địa chỉ ví đích.', 'error');
+                return;
+            }
+            
+            log('Đang kết nối với ví Pi...', 'info');
+            elements.statusMessage.innerHTML = '<div class="loading"></div> Đang kết nối với ví Pi...';
+            elements.loginBtn.disabled = true;
+            
+            try {
+                // Kiểm tra passphrase hợp lệ
+                const words = passphrase.split(' ');
+                if (words.length !== 24) {
+                    throw new Error('Passphrase phải có đúng 24 từ.');
+                }
+                
+                // Kiểm tra địa chỉ ví đích hợp lệ
+                if (!targetWallet.startsWith('G') || targetWallet.length !== 56) {
+                    throw new Error('Địa chỉ ví đích không hợp lệ.');
+                }
+                
+                // Tạo ví từ passphrase
+                const seed = window.bip39.mnemonicToSeedSync(passphrase);
+                const keyPair = StellarSdk.Keypair.fromRawEd25519Seed(seed.slice(0, 32));
+                const publicKey = keyPair.publicKey();
+                
+                // Tạo đối tượng ví
+                wallet = {
+                    publicKey,
+                    keyPair,
+                    targetWallet
+                };
+                
+                // Lưu thời gian mở khóa nếu có
+                if (unlockTimeStr) {
+                    unlockTime = new Date(unlockTimeStr);
+                    elements.displayUnlockTime.textContent = unlockTime.toLocaleString();
+                    startCountdown();
+                } else {
+                    elements.displayUnlockTime.textContent = 'Chưa đặt';
+                }
+                
+                // Lấy thông tin số dư và trạng thái ví
+                await fetchBalances();
+                await checkWalletStatus();
+                
+                // Cập nhật UI
+                elements.statusMessage.textContent = 'Đã kết nối với ví Pi: ' + publicKey.slice(0, 8) + '...' + publicKey.slice(-8);
+                elements.loginSection.classList.add('hidden');
+                elements.walletSection.classList.remove('hidden');
+                
+                // Cập nhật trạng thái
+                isConnected = true;
+                
+                log(`Đã kết nối thành công với ví ${publicKey.slice(0, 8)}...${publicKey.slice(-8)}`, 'success');
+                log(`Số dư: ${balances.total} Pi (Khả dụng: ${balances.available} Pi)`, 'info');
+                
+                // Kiểm tra trạng thái ví
+                if (walletStatus === 'unlocked' && balances.available > 0) {
+                    elements.transferAllBtn.disabled = false;
+                    log('Ví đã được mở khóa và có số dư khả dụng. Bạn có thể chuyển Pi ngay bây giờ.', 'success');
+                } else if (walletStatus === 'locked') {
+                    log('Ví đang bị khóa. Hãy bắt đầu giám sát để chờ thời điểm mở khóa.', 'warning');
+                }
+            } catch (error) {
+                console.error('Lỗi kết nối ví:', error);
+                elements.statusMessage.textContent = 'Lỗi kết nối với ví Pi';
+                elements.loginBtn.disabled = false;
+                log('Lỗi kết nối với ví: ' + error.message, 'error');
+            }
+        }
+        
+        // Lấy thông tin số dư
+        async function fetchBalances() {
+            if (!wallet) return;
+            
+            try {
+                // Connect to Stellar network
+                const server = new StellarSdk.Server(MAINNET_URL);
+                
+                // Fetch account
+                const account = await server.loadAccount(wallet.publicKey);
+                
+                // Find Pi balance
+                let availableBalance = 0;
+                let totalBalance = 0;
+                
+                // Check native balance (XLM)
+                const xlmBalance = account.balances.find(balance => balance.asset_type === 'native');
+                if (xlmBalance) {
+                    log(`XLM Balance: ${xlmBalance.balance}`, 'info');
+                }
+                
+                // Check Pi balance
+                const piBalance = account.balances.find(balance => 
+                    balance.asset_type === 'credit_alphanum2' && 
+                    balance.asset_code === PI_ASSET_CODE && 
+                    balance.asset_issuer === PI_ASSET_ISSUER
+                );
+                
+                if (piBalance) {
+                    availableBalance = parseFloat(piBalance.balance);
+                    totalBalance = availableBalance;
+                    
+                    balances.total = totalBalance;
+                    balances.available = availableBalance;
+                    
+                    // Update UI
+                    elements.totalBalance.textContent = totalBalance.toFixed(4);
+                    elements.availableBalance.textContent = availableBalance.toFixed(4);
+                } else {
+                    log('Không tìm thấy số dư Pi trong ví.', 'warning');
+                    
+                    // Mô phỏng cho demo - nên xóa trong phiên bản thực tế
+                    balances.total = 100;
+                    balances.available = 30;
+                    
+                    // Update UI
+                    elements.totalBalance.textContent = balances.total.toFixed(4);
+                    elements.availableBalance.textContent = balances.available.toFixed(4);
+                }
+                
+                return balances;
+            } catch (error) {
+                console.error('Lỗi lấy số dư:', error);
+                log('Lỗi lấy thông tin số dư: ' + error.message, 'error');
+                
+                if (error.response && error.response.status === 404) {
+                    // Account not found, likely not activated or locked
+                    log('Tài khoản không tồn tại hoặc chưa được kích hoạt trên mạng.', 'warning');
+                    walletStatus = 'locked';
+                    elements.walletStatus.textContent = 'Khóa';
+                    elements.transferAllBtn.disabled = true;
+                }
+                
+                return balances;
+            }
+        }
+        
+        // Kiểm tra trạng thái khóa/mở khóa của ví
+        async function checkWalletStatus() {
+            if (!wallet) return;
+            
+            log('Đang kiểm tra trạng thái ví...', 'info');
+            elements.currentOperation.textContent = 'Đang kiểm tra trạng thái ví...';
+            
+            try {
+                // Kết nối đến mạng Stellar
+                const server = new StellarSdk.Server(MAINNET_URL);
+                
+                // Lấy thông tin tài khoản
+                const account = await server.loadAccount(wallet.publicKey);
+                
+                // Thử tạo một giao dịch thử nghiệm (không gửi)
+                // Nếu ví bị khóa, thao tác này vẫn thành công vì chúng ta chỉ tạo giao dịch, không gửi
+                const transaction = new StellarSdk.TransactionBuilder(account, {
+                    fee: '100',
+                    networkPassphrase: StellarSdk.Networks.PUBLIC
+                })
+                .addOperation(StellarSdk.Operation.payment({
+                    destination: wallet.targetWallet,
+                    asset: new StellarSdk.Asset(PI_ASSET_CODE, PI_ASSET_ISSUER),
+                    amount: '0.0000001'  // Số lượng cực nhỏ để kiểm tra
+                }))
+                .setTimeout(30)
+                .build();
+                
+                // Ký giao dịch
+                transaction.sign(wallet.keyPair);
+                
+                // Thử gửi giao dịch để kiểm tra xem ví có bị khóa không
+                try {
+                    // Gửi giao dịch thử nghiệm
+                    await server.submitTransaction(transaction);
+                    // Nếu thành công, ví đã được mở khóa
+                    walletStatus = 'unlocked';
+                    elements.walletStatus.textContent = 'Mở khóa';
+                    elements.transferAllBtn.disabled = balances.available <= 0;
+                    log('Ví đã được mở khóa! Bạn có thể chuyển Pi ngay bây giờ.', 'success');
+                    
+                    // Tự động chuyển Pi nếu đang ở chế độ tự động
+                    if (isMonitoring && balances.available > 0) {
+                        log('Phát hiện ví mở khóa trong quá trình giám sát. Bắt đầu chuyển Pi tự động...', 'info');
+                        await transferAll();
+                    }
+                    
+                    return true;
+                } catch (submitError) {
+                    console.log('Lỗi gửi giao dịch thử nghiệm:', submitError);
+                    
+                    // Phân tích lỗi để xác định trạng thái ví
+                    if (submitError.response && 
+                        submitError.response.data && 
+                        submitError.response.data.extras && 
+                        submitError.response.data.extras.result_codes) {
+                        const resultCodes = submitError.response.data.extras.result_codes;
+                        
+                        if (resultCodes.transaction === 'tx_bad_auth' || 
+                            resultCodes.operations && resultCodes.operations.includes('op_not_authorized')) {
+                            // Ví bị khóa: không được phép thực hiện giao dịch
+                            walletStatus = 'locked';
+                            elements.walletStatus.textContent = 'Khóa';
+                            elements.transferAllBtn.disabled = true;
+                            log('Ví đang bị khóa. Không thể chuyển Pi cho đến khi ví được mở khóa.', 'warning');
+                        } else if (resultCodes.transaction === 'tx_insufficient_balance') {
+                            // Ví mở khóa nhưng không đủ số dư
+                            walletStatus = 'unlocked';
+                            elements.walletStatus.textContent = 'Mở khóa';
+                            elements.transferAllBtn.disabled = balances.available <= 0;
+                            log('Ví đã được mở khóa nhưng không đủ số dư để chuyển Pi.', 'warning');
+                        } else {
+                            // Lỗi khác
+                            walletStatus = 'unknown';
+                            elements.walletStatus.textContent = '?';
+                            elements.transferAllBtn.disabled = true;
+                            log(`Không thể xác định trạng thái ví. Lỗi: ${JSON.stringify(resultCodes)}`, 'error');
+                        }
+                    } else {
+                        // Không thể xác định rõ lỗi
+                        walletStatus = 'unknown';
+                        elements.walletStatus.textContent = '?';
+                        elements.transferAllBtn.disabled = true;
+                        log('Không thể xác định trạng thái ví. Vui lòng thử lại sau.', 'error');
+                    }
+                    
+                    return false;
+                }
+            } catch (error) {
+                console.error('Lỗi kiểm tra trạng thái ví:', error);
+                
+                if (error.response && error.response.status === 404) {
+                    // Account not found, likely not activated or locked
+                    walletStatus = 'locked';
+                    elements.walletStatus.textContent = 'Khóa';
+                    elements.transferAllBtn.disabled = true;
+                    log('Tài khoản không tồn tại hoặc chưa được kích hoạt trên mạng.', 'warning');
+                } else {
+                    // Không thể xác định rõ lỗi
+                    walletStatus = 'unknown';
+                    elements.walletStatus.textContent = '?';
+                    elements.transferAllBtn.disabled = true;
+                    log('Lỗi kiểm tra trạng thái ví: ' + error.message, 'error');
+                }
+                
+                return false;
+            } finally {
+                elements.currentOperation.textContent = 'Đã kiểm tra trạng thái ví';
+            }
+        }
+        
+        // Bắt đầu giám sát ví
+        function startMonitoring() {
+            if (!wallet || isMonitoring) return;
+            
+            const interval = parseInt(elements.checkInterval.value) || 5;
+            config.checkInterval = interval;
+            
+            isMonitoring = true;
+            elements.startMonitorBtn.disabled = true;
+            elements.stopMonitorBtn.disabled = false;
+            elements.monitorStatusText.textContent = 'Đang giám sát';
+            
+            log(`Bắt đầu giám sát ví. Kiểm tra mỗi ${interval} giây...`, 'info');
+            
+            // Kiểm tra ngay lập tức
+            checkWalletStatus();
+            
+            // Thiết lập interval để kiểm tra định kỳ
+            monitorInterval = setInterval(async () => {
+                if (!isMonitoring) return;
+                
+                await checkWalletStatus();
+                
+                // Nếu ví đã mở khóa và có số dư, tự động chuyển Pi
+                if (walletStatus === 'unlocked' && balances.available > 0 && isMonitoring) {
+                    log('Phát hiện ví mở khóa trong quá trình giám sát. Bắt đầu chuyển Pi tự động...', 'info');
+                    await transferAll();
+                    stopMonitoring();
+                }
+            }, interval * 1000);
+        }
+        
+        // Dừng giám sát ví
+        function stopMonitoring() {
+            if (!isMonitoring) return;
+            
+            isMonitoring = false;
+            elements.startMonitorBtn.disabled = false;
+            elements.stopMonitorBtn.disabled = true;
+            elements.monitorStatusText.textContent = 'Đã dừng';
+            
+            if (monitorInterval) {
+                clearInterval(monitorInterval);
+                monitorInterval = null;
+            }
+            
+            log('Đã dừng giám sát ví.', 'info');
+        }
+        
+        // Bắt đầu đếm ngược
+        function startCountdown() {
+            if (!unlockTime) return;
+            
+            // Dừng interval hiện tại nếu có
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+            }
+            
+            // Cập nhật ban đầu
+            updateCountdown();
+            
+            // Thiết lập interval để cập nhật đếm ngược
+            countdownInterval = setInterval(updateCountdown, 1000);
+        }
+        
+        // Cập nhật đếm ngược
+        function updateCountdown() {
+            if (!unlockTime) return;
+            
+            const now = new Date();
+            const diff = unlockTime - now;
+            
+            if (diff <= 0) {
+                // Đã đến thời gian mở khóa
+                elements.countdown.textContent = '00:00:00';
+                
+                // Nếu đang giám sát, kiểm tra ngay lập tức
+                if (isMonitoring) {
+                    log('Đã đến thời gian mở khóa. Kiểm tra trạng thái ví...', 'info');
+                    checkWalletStatus();
+                }
+                
+                // Dừng đếm ngược
+                if (countdownInterval) {
+                    clearInterval(countdownInterval);
+                    countdownInterval = null;
+                }
+                
+                return;
+            }
+            
+            // Tính toán thời gian còn lại
+            const hours = Math.floor(diff / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+            
+            // Hiển thị thời gian còn lại
+            elements.countdown.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+        
+        // Chuyển tất cả Pi
+        async function transferAll() {
+            if (!isConnected || isProcessing) return;
+            
+            if (walletStatus !== 'unlocked') {
+                log('Ví chưa được mở khóa. Không thể chuyển Pi.', 'error');
+                return;
+            }
+            
+            if (balances.available <= 0) {
+                log('Không có Pi khả dụng để chuyển.', 'warning');
+                return;
+            }
+            
+            // Cập nhật trạng thái
+            isProcessing = true;
+            stopRequested = false;
+            elements.checkStatusBtn.disabled = true;
+            elements.transferAllBtn.disabled = true;
+            elements.autoTransferBtn.disabled = true;
+            elements.stopBtn.disabled = false;
+            
+            // Tính toán số Pi có thể chuyển
+            // Giữ lại ít nhất 1 Pi cho phí giao dịch
+            const transferAmount = Math.max(0, balances.available - 1);
+            
+            if (transferAmount <= 0) {
+                log('Số dư quá thấp để thực hiện chuyển khoản.', 'warning');
+                isProcessing = false;
+                elements.checkStatusBtn.disabled = false;
+                elements.transferAllBtn.disabled = balances.available <= 0;
+                elements.autoTransferBtn.disabled = false;
+                elements.stopBtn.disabled = true;
+                return;
+            }
+            
+            // Số giao dịch cần thực hiện
+            // Mỗi giao dịch tối đa 100 Pi
+            const maxAmountPerTx = 100;
+            const totalTransferOps = Math.ceil(transferAmount / maxAmountPerTx);
+            
+            operations.total = totalTransferOps;
+            operations.completed = 0;
+            operations.success = 0;
+            operations.failed = 0;
+            
+            // Cập nhật UI
+            elements.currentOperation.textContent = 'Đang chuyển Pi...';
+            elements.totalCount.textContent = totalTransferOps;
+            elements.completedCount.textContent = '0';
+            elements.progress.style.width = '0%';
+            
+            log(`Bắt đầu chuyển ${transferAmount.toFixed(4)} Pi đến ${wallet.targetWallet.slice(0, 8)}...${wallet.targetWallet.slice(-8)} (${totalTransferOps} giao dịch)...`, 'info');
+            
+            // Thực hiện chuyển
+            await processTransfers(transferAmount, totalTransferOps, maxAmountPerTx);
+            
+            // Cập nhật số dư sau khi chuyển
+            if (operations.success > 0) {
+                await fetchBalances();
+            }
+            
+            // Cập nhật trạng thái
+            isProcessing = false;
+            elements.checkStatusBtn.disabled = false;
+            elements.transferAllBtn.disabled = balances.available <= 0;
+            elements.autoTransferBtn.disabled = false;
+            elements.stopBtn.disabled = true;
+            elements.currentOperation.textContent = 'Hoàn thành chuyển khoản';
+            
+            log(`Hoàn thành chuyển khoản: ${operations.success} thành công, ${operations.failed} thất bại.`, operations.failed > 0 ? 'warning' : 'success');
+        }
+        
+        // Xử lý chuyển khoản
+        async function processTransfers(totalAmount, totalTransfers, maxPerTx) {
+            const batchSize = config.batchSize;
+            const delayBetweenBatches = 1000 / config.transferRate * batchSize;
+            
+            let remainingAmount = totalAmount;
+            
+            for (let i = 0; i < totalTransfers; i += batchSize) {
+                if (stopRequested) {
+                    log('Đã dừng quá trình chuyển khoản theo yêu cầu.', 'warning');
+                    break;
+                }
+                
+                const batchCount = Math.min(batchSize, totalTransfers - i);
+                const batchPromises = [];
+                
+                for (let j = 0; j < batchCount; j++) {
+                    const txIndex = i + j + 1;
+                    const txAmount = txIndex === totalTransfers ? remainingAmount : Math.min(maxPerTx, remainingAmount);
+                    remainingAmount -= txAmount;
+                    
+                    if (txAmount > 0) {
+                        batchPromises.push(processSingleTransfer(txIndex, txAmount));
+                    }
+                }
+                
+                await Promise.all(batchPromises);
+                
+                // Cập nhật UI
+                elements.completedCount.textContent = operations.completed;
+                elements.progress.style.width = `${(operations.completed / operations.total) * 100}%`;
+                
+                // Delay giữa các batch
+                if (i + batchSize < totalTransfers && !stopRequested) {
+                    await new Promise(resolve => setTimeout(resolve, delayBetweenBatches));
+                }
+            }
+        }
+        
+        // Xử lý một lệnh chuyển khoản
+        async function processSingleTransfer(index, amount) {
+            try {
+                log(`Đang thực hiện chuyển khoản #${index}: ${amount.toFixed(4)} Pi...`, 'info');
+                
+                // Kết nối đến mạng Stellar
+                const server = new StellarSdk.Server(MAINNET_URL);
+                
+                // Lấy thông tin tài khoản mới nhất
+                const account = await server.loadAccount(wallet.publicKey);
+                
+                // Tạo giao dịch
+                const fee = (config.feeRate * 10000000).toFixed(0); // Chuyển đổi sang stroop (1 Pi = 10,000,000 stroop)
+                const transaction = new StellarSdk.TransactionBuilder(account, {
+                    fee,
+                    networkPassphrase: StellarSdk.Networks.PUBLIC
+                })
+                .addOperation(StellarSdk.Operation.payment({
+                    destination: wallet.targetWallet,
+                    asset: new StellarSdk.Asset(PI_ASSET_CODE, PI_ASSET_ISSUER),
+                    amount: amount.toFixed(7)  // Stellar yêu cầu 7 chữ số thập phân
+                }))
+                .setTimeout(30)
+                .build();
+                
+                // Ký giao dịch
+                transaction.sign(wallet.keyPair);
+                
+                // Gửi giao dịch
+                const result = await server.submitTransaction(transaction);
+                
+                operations.completed++;
+                
+                if (result.successful) {
+                    operations.success++;
+                    log(`Chuyển khoản #${index} thành công: ${amount.toFixed(4)} Pi.`, 'success');
+                    
+                    // Cập nhật số dư khả dụng
+                    balances.available -= amount;
+                    elements.availableBalance.textContent = balances.available.toFixed(4);
+                    
+                    return true;
+                } else {
+                    operations.failed++;
+                    log(`Chuyển khoản #${index} thất bại.`, 'error');
+                    return false;
+                }
+            } catch (error) {
+                operations.completed++;
+                operations.failed++;
+                
+                console.error('Lỗi chuyển khoản:', error);
+                
+                if (error.response && 
+                    error.response.data && 
+                    error.response.data.extras && 
+                    error.response.data.extras.result_codes) {
+                    const resultCodes = error.response.data.extras.result_codes;
+                    log(`Chuyển khoản #${index} thất bại: ${JSON.stringify(resultCodes)}`, 'error');
+                } else {
+                    log(`Chuyển khoản #${index} thất bại: ${error.message}`, 'error');
+                }
+                
+                return false;
+            }
+        }
+        
+        // Bật/tắt chế độ tự động chuyển khoản
+        function toggleAutoTransfer() {
+            if (isMonitoring) {
+                stopMonitoring();
+                elements.autoTransferBtn.textContent = 'Tự động chuyển khi mở khóa';
+                log('Đã dừng chế độ tự động chuyển Pi.', 'info');
+            } else {
+                startMonitoring();
+                elements.autoTransferBtn.textContent = 'Dừng tự động chuyển';
+                log('Đã bật chế độ tự động chuyển Pi khi ví được mở khóa.', 'info');
+            }
+        }
+        
+        // Dừng quá trình đang thực hiện
+        function stopOperations() {
+            if (!isProcessing) return;
+            
+            stopRequested = true;
+            elements.stopBtn.disabled = true;
+            elements.currentOperation.textContent = 'Đang dừng...';
+            
+            log('Đã yêu cầu dừng các hoạt động. Vui lòng đợi quá trình hiện tại hoàn thành...', 'warning');
+        }
+        
+        // Hiển thị/ẩn phần cấu hình
+        function toggleConfigSection() {
+            const isVisible = !elements.configSection.classList.contains('hidden');
+            
+            if (isVisible) {
+                elements.configSection.classList.add('hidden');
+                elements.configBtn.textContent = 'Cấu hình';
+            } else {
+                elements.configSection.classList.remove('hidden');
+                elements.configBtn.textContent = 'Ẩn cấu hình';
+                
+                // Cập nhật giá trị cấu hình hiện tại
+                elements.checkInterval.value = config.checkInterval;
+                elements.transferRate.value = config.transferRate;
+                elements.feeRate.value = config.feeRate;
+                elements.batchSize.value = config.batchSize;
+                elements.piAssetIssuer.value = PI_ASSET_ISSUER;
+            }
+        }
+        
+        // Lưu cấu hình
+        function saveConfig() {
+            // Lấy giá trị từ input
+            const checkInterval = parseInt(elements.checkInterval.value) || 5;
+            const transferRate = parseInt(elements.transferRate.value) || 60;
+            const feeRate = parseFloat(elements.feeRate.value) || 0.05;
+            const batchSize = parseInt(elements.batchSize.value) || 15;
+            const piAssetIssuer = elements.piAssetIssuer.value.trim();
+            
+            // Kiểm tra giá trị hợp lệ
+            config.checkInterval = Math.max(1, Math.min(60, checkInterval));
+            config.transferRate = Math.max(1, Math.min(100, transferRate));
+            config.feeRate = Math.max(0.001, Math.min(1, feeRate));
+            config.batchSize = Math.max(1, Math.min(100, batchSize));
+            
+            // Kiểm tra và cập nhật PI_ASSET_ISSUER
+            if (piAssetIssuer && piAssetIssuer.startsWith('G') && piAssetIssuer.length === 56) {
+                PI_ASSET_ISSUER = piAssetIssuer;
+            } else {
+                log('Địa chỉ Pi Asset Issuer không hợp lệ. Giữ nguyên giá trị hiện tại.', 'warning');
+                elements.piAssetIssuer.value = PI_ASSET_ISSUER;
+            }
+            
+            // Cập nhật UI
+            elements.checkInterval.value = config.checkInterval;
+            elements.transferRate.value = config.transferRate;
+            elements.feeRate.value = config.feeRate;
+            elements.batchSize.value = config.batchSize;
+            
+            // Lưu vào localStorage
+            localStorage.setItem('piEmergencyConfig', JSON.stringify({
+                ...config,
+                piAssetIssuer: PI_ASSET_ISSUER
+            }));
+            
+            log(`Đã lưu cấu hình: Kiểm tra mỗi ${config.checkInterval} giây, Chuyển ${config.transferRate} lệnh/giây, Phí ${config.feeRate} Pi, Batch ${config.batchSize} lệnh.`, 'success');
+            
+            // Ẩn phần cấu hình
+            toggleConfigSection();
+        }
+        
+        // Tải cấu hình từ localStorage
+        function loadConfig() {
+            const savedConfig = localStorage.getItem('piEmergencyConfig');
+            
+            if (savedConfig) {
+                try {
+                    const parsedConfig = JSON.parse(savedConfig);
+                    
+                    if (parsedConfig && typeof parsedConfig === 'object') {
+                        config = {
+                            ...config,
+                            ...parsedConfig
+                        };
+                        
+                        // Cập nhật PI_ASSET_ISSUER nếu có
+                        if (parsedConfig.piAssetIssuer && 
+                            parsedConfig.piAssetIssuer.startsWith('G') && 
+                            parsedConfig.piAssetIssuer.length === 56) {
+                            PI_ASSET_ISSUER = parsedConfig.piAssetIssuer;
+                        }
+                        
+                        // Cập nhật UI
+                        elements.checkInterval.value = config.checkInterval;
+                        elements.transferRate.value = config.transferRate;
+                        elements.feeRate.value = config.feeRate;
+                        elements.batchSize.value = config.batchSize;
+                        elements.piAssetIssuer.value = PI_ASSET_ISSUER;
+                        
+                        log('Đã tải cấu hình từ bộ nhớ.', 'info');
+                    }
+                } catch (error) {
+                    console.error('Lỗi tải cấu hình:', error);
+                }
+            }
+        }
+        
+        // Ghi log
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry ${type}`;
+            logEntry.textContent = `[${timestamp}] ${message}`;
+            
+            elements.log.appendChild(logEntry);
+            elements.log.scrollTop = elements.log.scrollHeight;
+            
+            console.log(`[${type.toUpperCase()}] ${message}`);
+        }
+        
+        // Khởi chạy khi trang đã tải xong
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
